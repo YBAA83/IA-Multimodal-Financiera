@@ -1,0 +1,27 @@
+Fecha,Concepto,Monto,Categoria
+2026-01-01,Venta Software suscripcion,5000,Ingreso
+2026-01-05,Alquiler Oficina Calle Mayor,-1200,Gasto
+2026-01-10,Publicidad Facebook Ads,-500,Gasto
+2026-01-15,Servidores Google Cloud,-300,Gasto
+2026-01-20,Nomina Desarrollador Junior,-3000,Gasto
+2026-01-25,Servicios Consultoria IA,2500,Ingreso
+2026-01-30,Retirada efectivo sospechosa,-9500,Gasto
+2026-01-01,Venta Licencias Software,12500,Ingresos
+2026-01-03,Alquiler Oficina,-1200,Operativo
+2026-01-05,Nomina Equipo Dev,-4500,Personal
+2026-01-07,Campana Marketing Google Ads,-1800,Marketing
+2026-01-10,Compra Servidores AWS,-2100,Tecnologia
+2026-01-15,Consultoria IA Cliente A,3000,Ingresos
+2026-01-20,Pago Efectivo Proveedor X,-9500,Riesgo Fiscal
+2026-01-22,Suscripciones Software (Jira Slack),-450,Tecnologia
+2026-01-25,Facturacion Proyecto Web,4500,Ingresos
+2026-01-28,Cena de Equipo (Representacion),-350,Operativo
+2026-01-30,Retirada Efectivo Cajero,-1500,Personal
+2025-12-01,Ventas Diciembre,8000,Ingresos
+2025-12-15,Gastos Operativos,-2000,Operativo
+2026-01-01,Ventas Enero,10000,Ingresos
+2026-01-10,Sueldos Enero,-5000,Personal
+2026-01-20,Pago Efectivo Riesgo,-9500,Riesgo
+2026-02-01,Ventas Febrero (Proyectadas),12000,Ingresos
+2026-02-10,Aumento Infraestructura,-7000,Tecnologia
+2026-02-02,Pago de Comidas,-1500,Dietas
