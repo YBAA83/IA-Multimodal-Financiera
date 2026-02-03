@@ -1,86 +1,65 @@
 import os
 import requests
-import pandas as pd
-import matplotlib.pyplot as plt
+import time
 from dotenv import load_dotenv
 from impresora import generar_pdf
 
-# 1. CONFIGURACIÓN E IDENTIDAD
+# 1. Configuración de entorno
 load_dotenv()
 api_key = os.getenv("GOOGLE_API_KEY")
-model_name = "models/gemini-flash-latest"
-url = f"https://generativelanguage.googleapis.com/v1beta/{model_name}:generateContent?key={api_key}"
 
-print("\n--- 🤖 INICIANDO EL MONSTRUO (IA FINANCIERA) ---")
+# Usamos 'gemini-flash-latest' para máxima estabilidad y evitar errores 429
+MODELO = "gemini-flash-latest"
+URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODELO}:generateContent?key={api_key}"
 
-# 2. CARGA Y PROCESAMIENTO DE DATOS
-try:
-    df = pd.read_csv('movimientos.csv')
-    df['Fecha'] = pd.to_datetime(df['Fecha'])
-    
-    # KPIs Rápidos
-    ingresos = df[df['Monto'] > 0]['Monto'].sum()
-    gastos = abs(df[df['Monto'] < 0]['Monto'].sum())
-    balance = ingresos - gastos
-except Exception as e:
-    print(f"❌ Error en datos: {e}")
-    exit()
-
-# 3. GENERACIÓN DE GRÁFICOS
-print("📊 Creando visualizaciones de alto nivel...")
-
-# A. Gráfico de Tendencia (Línea de Vida)
-plt.figure(figsize=(10, 5))
-tendencia = df.groupby('Fecha')['Monto'].sum().cumsum()
-plt.plot(tendencia.index, tendencia.values, marker='o', color='#3498db', linewidth=3)
-plt.fill_between(tendencia.index, tendencia.values, color='#3498db', alpha=0.1)
-plt.title('Evolucion del Flujo de Caja Neto Acumulado')
-plt.grid(True, alpha=0.3)
-ruta_linea = os.path.join("output", "grafico_tendencia.png")
-plt.savefig(ruta_linea)
-plt.close()
-
-# B. Gráfico de Donut (Distribución de Gastos)
-gastos_df = df[df['Monto'] < 0].copy()
-gastos_df['Monto'] = abs(gastos_df['Monto'])
-distribucion = gastos_df.groupby('Categoria')['Monto'].sum()
-
-plt.figure(figsize=(6, 6))
-plt.pie(distribucion, labels=distribucion.index, autopct='%1.1f%%', startangle=90, 
-        colors=['#ff9f43', '#ee5253', '#5f27cd', '#54a0ff'], wedgeprops=dict(width=0.4))
-plt.title('Desglose de Gastos por Categoria')
-ruta_donut = os.path.join("output", "grafico_donut.png")
-plt.savefig(ruta_donut)
-plt.close()
-
-# 4. CONSULTA A LA IA (Contexto Multimodal)
-print("🧠 El Monstruo esta razonando sobre el futuro...")
-tabla_md = df.to_markdown()
-prompt = f"""
-Actua como un Ingeniero Financiero de elite. Analiza esta situacion:
-{tabla_md}
-
-Resumen: Ingresos {ingresos}€ | Gastos {gastos}€ | Balance {balance}€
-
-Tareas:
-1. Basado en la tendencia (Burn Rate), ¿cuando se agotara la liquidez?
-2. Identifica riesgos criticos (Pagos en efectivo o gastos desproporcionados).
-3. Dame 3 recomendaciones estrategicas para el proximo trimestre.
+# 2. Datos para el análisis
+datos_flujo_caja = """
+Historial Mensual Real (Q1 2026):
+- Enero: Ingresos 50.000€, Gastos 35.000€
+- Febrero: Ingresos 48.000€, Gastos 38.000€
+- Marzo: Ingresos 52.000€, Gastos 42.000€
 """
 
-payload = {"contents": [{"parts": [{"text": prompt}]}]}
-headers = {'Content-Type': 'application/json'}
+prompt_maestro = f"""
+Actúa como un Director Financiero (CFO) y experto en IA. 
+Analiza estos datos financieros: {datos_flujo_caja}
 
-try:
-    response = requests.post(url, headers=headers, json=payload)
-    if response.status_code == 200:
-        texto_ia = response.json()['candidates'][0]['content']['parts'][0]['text']
-        
-        # 5. MAQUETACIÓN DEL INFORME FINAL
-        # Elegimos el gráfico de Tendencia para el informe principal
-        generar_pdf(texto_ia, "Informe_Maestro_Financiero.pdf", ruta_linea)
-        print(f"\n✅ INFORME GENERADO: Revisa la carpeta 'output'")
-    else:
-        print(f"❌ Error API: {response.text}")
-except Exception as e:
-    print(f"❌ Error Critico: {e}")
+TAREA:
+1. Proyecta el cierre del próximo trimestre (Q2).
+2. Calcula la tendencia del margen operativo.
+3. Identifica riesgos si los gastos operativos suben un 10% mensual.
+4. Sugiere 3 recomendaciones estratégicas.
+"""
+
+def ejecutar_analisis(reintentos=3):
+    print(f"--- 🤖 EL MONSTRUO TRABAJANDO CON {MODELO} ---")
+    headers = {'Content-Type': 'application/json'}
+    payload = {"contents": [{"parts": [{"text": prompt_maestro}]}]}
+
+    for i in range(reintentos):
+        try:
+            response = requests.post(URL, headers=headers, json=payload)
+            
+            if response.status_code == 200:
+                data = response.json()
+                texto_analisis = data['candidates'][0]['content']['parts'][0]['text']
+                
+                # Generar el PDF
+                generar_pdf(texto_analisis, "Analisis_Proyectivo_2026.pdf")
+                print(f"\n✅ ¡MISIÓN CUMPLIDA! PDF generado con éxito.")
+                return 
+            
+            elif response.status_code == 429:
+                espera = 60 # Esperamos el minuto reglamentario
+                print(f"⚠️ Cuota llena. Reintento {i+1}/{reintentos} en {espera} segundos...")
+                time.sleep(espera)
+            else:
+                print(f"❌ Error API ({response.status_code}): {response.text}")
+                break
+
+        except Exception as e:
+            print(f"❌ Error crítico: {e}")
+            break
+
+if __name__ == "__main__":
+    ejecutar_analisis()
